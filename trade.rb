@@ -5,7 +5,7 @@ require './trade_support'
 require 'benchmark'
 require 'parallel'
 require 'yaml'
-
+require 'colorize'
 
 Config.load
 
@@ -26,6 +26,18 @@ LOOK_RANGE = 5 #単位: 板の行数。bitflyerの買い板(Bid)の中から、�
 WAIT_WALL = 1
 WAIT_BUYING = 2
 WAIT_SELLING = 3
+def print_state(state)
+  s = nil
+  case state
+  when WAIT_WALL
+    s = "WAIT_WALL"
+  when WAIT_BUYING
+    s = "WAIT_BUYING"
+  when WAIT_SELLING
+    s = "WAIT_SELLING"
+  end
+  p "current state: #{s}"
+end
 
 
 market = Bitflyer.new
@@ -40,17 +52,16 @@ complete_sell_list = []
 begin
   loop do
     begin
-      p "current state: #{state}"
+      print_state(state)
       TradeSupport.refresh_balance(market)
 
       market.update_board
       wall = TradeSupport.search_wall(market, WALL_HEIGHT_BTC)
+      p "Wall found: #{wall[:rate]}, #{wall[:amount]}"
 
       case state
       when WAIT_WALL
         next if wall.nil?
-
-        p "wall found: #{wall[:rate]}, #{wall[:amount]}"
         buying_rate = wall[:rate] + BUY_MARGIN_JPY
         buying_order_id = TradeSupport.buy(market, buying_rate, BUY_AMOUNT_BTC)
         buying_order = {id: buying_order_id, rate: buying_rate, amount: BUY_AMOUNT_BTC}
@@ -113,35 +124,7 @@ begin
   end
 
 ensure
-
-  p "-------------------"
-  p "completed buy list:"
-  sum = 0
-  complete_buy_list.each do |x|
-    rate = x[:rate].to_i
-    amount = x[:amount].to_f
-    p "#{rate} #{amount}"
-    sum += rate * amount
-  end
-  p "buy sum jpy = #{sum}"
-
-  p "-------------------"
-  p "completed sell list:"
-  sum = 0
-  complete_sell_list.each do |x|
-    rate = x[:rate].to_i
-    amount = x[:amount].to_f
-    p "#{rate} #{amount}"
-    sum += rate * amount
-  end
-  p "sell sum jpy = #{sum}"
-
-  p "-------------------"
-  p "partially done list:"
-  partially_buy_list.each do |x|
-    p x
-  end
-
+  TradeSupport.print_summary(complete_buy_list, complete_sell_list, partially_buy_list)
 end
 
 
