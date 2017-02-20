@@ -1,0 +1,9 @@
+board_logs/*
+board_logs
+bin
+logs
+
+*.un~
+
+**/.DS_Store
+password.yml
