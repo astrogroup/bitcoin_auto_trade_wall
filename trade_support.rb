@@ -15,7 +15,7 @@ module TradeSupport
     def refresh_balance(market)
       market.update_balance
       balance = market.get_balance
-      p "Balance: #{market.name} JPY:#{sprintf("%7d", balance.jpy)} BTC:#{sprintf("%3.5f", balance.btc)}"
+      p "Balance   : JPY:#{sprintf("%7d", balance.jpy)} BTC:#{sprintf("%3.5f", balance.btc)}"
     end
 
     def search_wall(market, min_wall_height)
@@ -30,6 +30,7 @@ module TradeSupport
     end
 
     def print_summary(complete_buy_list, complete_sell_list, partially_buy_list)
+      p "                   "
       p "-------------------"
       p "   Trade Summary   "
       p "-------------------"
@@ -60,6 +61,8 @@ module TradeSupport
         p x
       end
 
+      p "-------------------"
+      p "       end         "
       p "-------------------"
     end
 
