@@ -4,8 +4,10 @@ require './trade_support'
 
 class STATE_WAIT_WALL
   def action(market, wall, buying_order, selling_order, complete_buy_list, complete_sell_list, partially_buy_list)
-    return self if wall.nil?
-    buying_rate = wall[:rate] + BUY_MARGIN_JPY
+    return self if wall.current_walls.empty?
+    p "New Wall found: #{wall.current_walls.first[:rate]}, #{wall.current_walls.first[:amount]}"
+    wall.previous_wall = wall.current_walls.first # save the wall
+    buying_rate = wall.current_walls.first[:rate] + BUY_MARGIN_JPY
     buying_order_id = TradeSupport.buy(market, buying_rate, BUY_AMOUNT_BTC)
     buying_order.merge!({id: buying_order_id, rate: buying_rate, amount: BUY_AMOUNT_BTC})
     state = STATE_WAIT_BUYING.new
@@ -17,11 +19,12 @@ end
 
 class STATE_WAIT_BUYING
   def action(market, wall, buying_order, selling_order, complete_buy_list, complete_sell_list, partially_buy_list)
-    if wall.nil?
+    if !wall.previous_wall_exist?
       p "Wall disappers when buying. The remaining buying order will be canceled."
       market.cancel_order(buying_order[:id])
       partially_buy_list.push(buying_order.dup)
       buying_order.clear
+      wall.clear
       state = STATE_WAIT_WALL.new
       p "state changed to WAIT_WALL"
       return state
@@ -46,9 +49,10 @@ end
 
 class STATE_WAIT_SELLING
   def action(market, wall, buying_order, selling_order, complete_buy_list, complete_sell_list, partially_buy_list)
-    if wall.nil?
+    if !wall.previous_wall_exist?
       p "Wall disappers when selling. the sell order will remain"
       selling_order.clear # leave the order and forget it.
+      wall.clear
       state = STATE_WAIT_WALL.new
       p "state changed to WAIT_WALL"
       return state
