@@ -1,5 +1,5 @@
 # bitcoin_auto_trade_wall
-auto trade by wall watching
+auto trade by wall watching algorithm by Mr.L
 
 
 $cp password_example.yml password.yml
@@ -13,4 +13,4 @@ BUY_AMOUNT_BTC ...
 
 $bundle exec ruby trade.rb
 
-Enjoy
+Enjoy trades.
